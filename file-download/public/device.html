@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,minimal-ui,minimum-scale=1,maximum-scale=1">
+    <!-- <link rel="stylesheet" type="text/css" href="css/style.css"> -->
+    <title>device test</title>
+</head>
+<body>
+    <h1>运动记步 - 2.0</h1>
+    <div id='stepDiv'>今天运动<span id="step">0</span>步</div>
+    <div>轨迹</div>
+    <div id='map'>
+        start
+    </div>
+    <input type="button" value="清空记录" onclick="clearStep()">
+    <script>
+        /**
+         * 设备重力感应事件监听
+         */
+        function isMove(options){
+            options = options || {deep:10,timeout:50};
+            let x,y,z,lastTime=0,map = document.querySelector("#map");
+            if(window.DeviceMotionEvent){
+                window.addEventListener("devicemotion",function(event){
+                    let acceleration = event.accelerationIncludingGravity;
+                    let curTime = new Date().getTime();
+                    // 判断运动频率是否达到要求,不符合要求时，忽略事件
+                    if(curTime - lastTime>options.timeout){
+                        map.innerHTML = "move start";
+                        // 判断运动幅度是否达到要求
+                        if(x===undefined || y===undefined || z===undefined){
+                            // 第一次运动，只记录，不做处理
+                            x = acceleration.x||0;
+                            y = acceleration.y||0;
+                            z = acceleration.z||0;
+                            x = x.toFixed(5)-0;
+                            y = y.toFixed(5)-0;
+                            z = z.toFixed(5)-0;
+                            lastTime = curTime;
+                            map.innerHTML += "<br>x,y,z : " + x + "," + y + "," + z;
+                            return;
+                        }else{
+                            // 开始处理
+                            let lastX = acceleration.x||0;
+                            let lastY = acceleration.y||0;
+                            let lastZ = acceleration.z||0;
+                            lastX = lastX.toFixed(5)-0;
+                            lastY = lastY.toFixed(5)-0;
+                            lastZ = lastZ.toFixed(5)-0;
+                            let time = curTime - lastTime;
+                            lastTime = curTime;
+                            map.innerHTML += "<br>x,y,z : " + x + "," + y + "," + z;
+                            map.innerHTML += "<br>lastx,lasty,lastz : " + lastX + "," + lastY + "," + lastZ;
+                            var speed = Math.abs(lastX + lastY + lastZ - x - y - z)*time/1000;
+                            x = lastX;
+                            y = lastY;
+                            z = lastZ;
+                            map.innerHTML += "<br>speed,time : " + speed + "," + time;
+                            if(speed>options.deep){
+                                let count = parseInt(localStorage.getItem("stepCount"));
+                                count = count?(count+1):1;
+                                document.querySelector("#step").innerHTML = count;
+                                localStorage.setItem("stepCount",count);
+                            }
+                        }
+                        map.innerHTML += "<br>move end";
+                    }
+                },false);
+            }else{
+                document.querySelector("#stepDiv").innerHTML = "此设备不支持计步功能！";
+            }
+        }
+        /**
+         * 清空步数
+         */
+        function clearStep(){
+            localStorage.removeItem("stepCount");
+            document.querySelector("#step").innerHTML = 0;
+        }
+        /**
+         * 初始化
+         */
+        window.onload = function(){
+            isMove({deep:1.5,timeout:300});
+        };
+    </script>
+</body>
+</html>

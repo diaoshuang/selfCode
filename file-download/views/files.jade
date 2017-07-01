@@ -1,0 +1,18 @@
+extends layout
+
+block content
+  h1 请选择下载文件：
+  - if (files.length)
+    ul
+      - files.forEach(function(item){
+        li
+          a.file(href='###') #{item.fileName}
+          span -- #{item.size}
+      - })
+    div 下载进度
+      span#progressing 0%
+
+  - else
+    p 没有可下载文件…
+block script
+  script(src='./javascripts/down-file.js')
