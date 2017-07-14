@@ -1,5 +1,5 @@
 // 顺序执行方法
-function row(arr){
+function row(...arr){
   if(!arr || !(arr instanceof Array) || arr.length<1){
     return;
   }
@@ -12,6 +12,14 @@ function row(arr){
     }
   }
 }
+
+let pipe = (...funcs) => val => funcs.reduce((a,b) =>{
+    if(a instanceof Promise){
+      b = a.then(b);
+    }else{
+      b = a()
+    }
+  },val)
 
 // 并发执行方法
 function column(arr){
